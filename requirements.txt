@@ -2,4 +2,4 @@ tweepy==4.14.0
 requests==2.31.0
 beautifulsoup4==4.12.2
 schedule==1.2.1
-mega>=0.9.0  # 代替ライブラリを使用
+mega-sdk-python>=1.0.0  # 公式の MEGA SDK を使用
