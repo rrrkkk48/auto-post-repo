@@ -10,6 +10,7 @@ import urllib.parse
 import os
 import json
 import socket
+from mega import Mega  # MEGAライブラリをインポート
 
 # ログ設定（1日分のみ、容量節約）
 logging.basicConfig(filename='log.txt', level=logging.INFO, format='%(asctime)s: %(message)s', filemode='w')
@@ -44,15 +45,39 @@ client = tweepy.Client(
     access_token_secret=ACCESS_TOKEN_SECRET
 )
 
+# MEGAからqualifications.jsonをダウンロード
+def download_from_mega():
+    logging.info("MEGAに接続中...")
+    mega = Mega()
+    try:
+        m = mega.login(os.getenv('MEGA_EMAIL'), os.getenv('MEGA_PASSWORD'))
+        logging.info("MEGAログイン成功")
+    except Exception as e:
+        logging.error(f"MEGAログイン失敗: {e}")
+        raise ValueError(f"MEGAログインに失敗しました: {e}")
+
+    # qualifications.jsonを検索・ダウンロード
+    logging.info("qualifications.jsonを検索中...")
+    file = m.find('qualifications.json')
+    if file:
+        logging.info("ファイルが見つかりました。ダウンロード中...")
+        m.download(file, dest_path='qualifications.json')
+        logging.info("qualifications.jsonダウンロード成功")
+    else:
+        logging.error("MEGAにqualifications.jsonが見つかりません。")
+        raise FileNotFoundError("MEGAにqualifications.jsonが見つかりません。")
+
 # 資格データをJSONファイルから読み込む
-# クラウド環境（Heroku）でも動作するよう、相対パスを使用
 QUALIFICATION_INFO = {}
 try:
-    # ローカル環境では C:/Users/rrkk/qualifications.json を使用
-    # Herokuではルートディレクトリ（/app/）に配置される
-    json_path = os.getenv("QUALIFICATIONS_PATH", "qualifications.json")
-    with open(json_path, 'r', encoding='utf-8') as f:
+    # MEGAからファイルをダウンロード
+    download_from_mega()
+
+    # ダウンロードしたファイルを読み込み
+    logging.info("qualifications.jsonを読み込み中...")
+    with open('qualifications.json', 'r', encoding='utf-8') as f:
         QUALIFICATION_INFO = json.load(f)
+    logging.info("資格データ読み込み成功")
 except Exception as e:
     logging.error(f"資格データの読み込みエラー: {e}")
     raise ValueError("資格データの読み込みに失敗しました。qualifications.jsonを確認してください。")
