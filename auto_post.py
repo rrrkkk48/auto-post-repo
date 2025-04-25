@@ -11,7 +11,7 @@ import urllib.parse
 import os
 import json
 import socket
-from pymega import Mega
+from mega import Mega
 
 # ロガー（日本語あり、普段使い用）
 logging.basicConfig(
